@@ -1,0 +1,46 @@
+name: MABUHAY Social Scheduler
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes (UTC)
+  workflow_dispatch:           # manual "Run workflow" button for testing
+
+permissions:
+  contents: write             # allows committing posted.json back
+
+concurrency:
+  group: mabuhay-scheduler
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run scheduler
+        env:
+          SYSTEM_USER_TOKEN: ${{ secrets.META_TOKEN }}
+          PAGE_ID: ${{ vars.PAGE_ID }}
+          IG_BUSINESS_ID: ${{ vars.IG_BUSINESS_ID }}
+          IMAGE_BASE: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/images
+        run: python run_scheduler.py
+
+      - name: Persist posted.json
+        run: |
+          if ! git diff --quiet posted.json 2>/dev/null; then
+            git config user.name "mabuhay-bot"
+            git config user.email "bot@mabuhayculture.com"
+            git add posted.json
+            git commit -m "chore: update posted state [skip ci]"
+            git push
+          else
+            echo "No state change."
+          fi

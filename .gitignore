@@ -1,0 +1,7 @@
+# NEVER commit the token or any local env
+*.env
+.env
+meta-token.env
+.DS_Store
+__pycache__/
+*.pyc
