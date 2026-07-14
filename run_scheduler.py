@@ -44,9 +44,18 @@ def due(post, now):
 
 def publish(post):
     caption = post["caption"]
-    urls = [img_url(n) for n in post["images"]]
     platforms = post.get("platforms", ["instagram", "facebook"])
     results = {}
+
+    if post["type"] == "reel":
+        video_url = img_url(post["video"])
+        if "instagram" in platforms:
+            results["instagram"] = poster.ig_reel(video_url, caption)
+        if "facebook" in platforms:
+            results["facebook"] = poster.fb_video(video_url, caption)
+        return results
+
+    urls = [img_url(n) for n in post["images"]]
     if "instagram" in platforms:
         if post["type"] == "carousel":
             results["instagram"] = poster.ig_carousel(urls, caption)

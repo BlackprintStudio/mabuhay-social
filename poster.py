@@ -85,7 +85,29 @@ def ig_carousel(image_urls, caption):
     return _post(f"{IG_ID}/media_publish", creation_id=parent)["id"]
 
 
+# ---------- Instagram Reels (video) ----------
+
+def ig_reel(video_url, caption, share_to_feed=True):
+    """Publish a Reel (single vertical video) to Instagram. Returns the media id.
+    Video processing is slower than images, so we poll longer."""
+    container = _post(
+        f"{IG_ID}/media",
+        media_type="REELS",
+        video_url=video_url,
+        caption=caption,
+        share_to_feed="true" if share_to_feed else "false",
+    )["id"]
+    _wait_finished(container, tries=60, delay=5)   # up to 5 min for transcoding
+    return _post(f"{IG_ID}/media_publish", creation_id=container)["id"]
+
+
 # ---------- Facebook ----------
+
+def fb_video(video_url, caption):
+    """Post a video to the Facebook Page (shows in the Page feed / Reels tab).
+    Returns the video id."""
+    return _post(f"{PAGE_ID}/videos", file_url=video_url, description=caption).get("id")
+
 
 def fb_photo(image_url, caption, scheduled_unix=None):
     """
